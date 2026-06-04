@@ -24,7 +24,10 @@ latest_posts:
 ---
 
 <div style="text-align: center; margin: 0 auto 2rem auto;">
-  <img src="/assets/img/reggae.tiff" style="width: 324px;" alt="EMERGE group">
+  <picture>
+    <source srcset="/assets/img/reggae-480.webp" type="image/webp">
+    <img src="/assets/img/reggae.tiff" style="width: 324px;" alt="EMERGE group">
+  </picture>
 </div>
 
 Welcome to the G**e**no**me** **r**e**g**ulation and **e**volution (EMERGE) research group. 
