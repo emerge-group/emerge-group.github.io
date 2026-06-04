@@ -2,10 +2,10 @@
 # Site settings
 # -----------------------------------------------------------------------------
 
-title: EMERGE Lab # the website title (if blank, full name will be used instead)
+title: EMERGE-group # the website title (if blank, full name will be used instead)
 first_name: EMERGE
 middle_name:
-last_name: Lab
+last_name: group
 contact_note: >
   Reach out to us via email or find us on GitHub.
 description: > # the ">" symbol means to ignore newlines until "footer_text:"
