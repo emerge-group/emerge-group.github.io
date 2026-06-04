@@ -2,10 +2,10 @@
 layout: about
 title: about
 permalink: /
-subtitle: Epigenomics and Mechanisms of Regulatory Genomics and Evolution
+subtitle: Genome regulation and evolution research group
 
 profile:
-  align: right
+  align: centre
   image: reggae.tiff
   image_circular: false
   more_info: >
