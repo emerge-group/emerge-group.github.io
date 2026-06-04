@@ -14,7 +14,7 @@ nav_order: 4
   border-radius: 8px;
   padding: 1.2rem 1.4rem;
   width: 300px;
-  background: var(--global-bg-color, #fff);
+  background: #fff;
   transition: box-shadow 0.2s;
 }
 .tool-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
