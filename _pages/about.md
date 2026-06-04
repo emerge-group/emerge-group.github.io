@@ -27,14 +27,20 @@ latest_posts:
   limit: 3
 ---
 
-Welcome to the **EMERGE lab** — Epigenomics and Mechanisms of Regulatory Genomics and Evolution.
+Welcome to the G**e**no**me** **r**e**g**ulation and **e**volution (EMERGE) research group. 
 
-We study how gene regulatory networks are wired, how they evolve, and how epigenomic mechanisms shape genome function across species. Our work combines computational genomics, comparative epigenomics, and evolutionary biology to understand the principles governing gene regulation.
 
-**Research themes:**
-- Regulatory element evolution and conservation
-- Epigenomic landscapes across species and cell types
-- Transcription factor binding and gene regulatory networks
-- Population genomics of regulatory variation
+EMERGE is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
+
+- **The Sandve lab** studies how genomes evolve with a focus on how large scale genome reorganization (polyploidy, transposable elements, genome scrambling) shape genome regulation including 3D organization. 
+
+- **The Hvidsten lab** develops computational and statistical methods to model gene regulatory networks and understand how network-level properties give rise to novel gene regulation and traits. 
+
+- **The Fjellheim lab** investigates how temperate grasses (Pooideae) evolved adaptations to cold climates over 65 million years, combining transcriptomics, genomics, and phylogenetics to trace the molecular basis of traits like frost tolerance and flowering time. 
+
+Together, EMERGE addresses fundamental questions about how gene regulation evolves — from the molecular mechanisms that shape genome function to the ecological and evolutionary forces that drive adaptation across species.
+
+EMERGE joins the forces of three PIs at NMBU addressing basic research questions related to genome and organismal evolution, gene regulation, shape genome function across species. Our work combines computational genomics, comparative epigenomics, and evolutionary biology to understand the principles governing gene regulation.
+
 
 Browse our [publications](/publications/), meet the [team](/profiles/), or explore our [projects](/projects/).
