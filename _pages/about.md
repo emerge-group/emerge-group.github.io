@@ -41,9 +41,6 @@ EMERGE is a cross-faculty research group at NMBU uniting three research groups w
 
 - **The Fjellheim lab** investigates how temperate grasses (Pooideae) evolved adaptations to cold climates over 65 million years, combining transcriptomics, genomics, and phylogenetics to trace the molecular basis of traits like frost tolerance and evolutionary biology to trace the molecular basis of traits like frost tolerance and flowering time. 
 
-Together, EMERGE addresses fundamental questions about how gene regulation evolves — from the molecular mechanisms that shape genome function to the ecological and evolutionary forces that drive adaptation across species.
-
-EMERGE joins the forces of three PIs at NMBU addressing basic research questions related to genome and organismal evolution, gene regulation, shape genome function across species. Our work combines computational genomics, comparative epigenomics, and evolutionary biology to understand the principles governing gene regulation.
-
+Together, EMERGE addresses fundamental questions about how genomes and traits evolves — from the molecular mechanisms to the ecological and evolutionary forces that drive adaptation across species.
 
 Browse our [publications](/publications/), meet the [team](/profiles/), or explore our [projects](/projects/).
