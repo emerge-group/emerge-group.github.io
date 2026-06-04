@@ -29,9 +29,9 @@ latest_posts:
 
 EMERGE is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
 
-- **Sandve lab**: Genome evolution [https://srsandve.org/](/*read more here*/)
-- **Hvidsten lab**: Computational and statistical methods [https://trhvidsten.com/](/*read more here*/)
-- **Fjellheim lab**: Plant genetics and evolution [https://fjellheimresearchgroup.blog/](/*read more here*/)
+- **Sandve lab**: Genome evolution ([*read more here*](https://srsandve.org/))
+- **Hvidsten lab**: Computational and statistical methods ([*read more here*](https://trhvidsten.com/))
+- **Fjellheim lab**: Plant genetics and evolution ([*read more here*](https://fjellheimresearchgroup.blog/))
 
 Together, EMERGE addresses fundamental questions about how genomes and traits evolves — from the molecular mechanisms to the ecological and evolutionary forces that drive adaptation across species.
 
