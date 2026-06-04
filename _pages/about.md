@@ -31,11 +31,9 @@ Welcome to the G**e**no**me** **r**e**g**ulation and **e**volution (EMERGE) rese
 
 EMERGE is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
 
-- **The Sandve lab** studies how genomes evolve with a focus on how large scale genome reorganization (polyploidy, transposable elements, genome scrambling) shape genome regulation including 3D organization. 
-
-- **The Hvidsten lab** develops computational and statistical methods to model gene regulatory networks and understand how network-level properties give rise to novel gene regulation and traits. 
-
-- **The Fjellheim lab** investigates how temperate grasses (Pooideae) evolved adaptations to cold climates over 65 million years, combining transcriptomics, genomics, and phylogenetics to trace the molecular basis of traits like frost tolerance and evolutionary biology to trace the molecular basis of traits like frost tolerance and flowering time. 
+- **Sandve lab**: Genome evolution [https://srsandve.org/](/*read more here*/)
+- **Hvidsten lab**: Computational and statistical methods [https://trhvidsten.com/](/*read more here*/)
+- **Fjellheim lab**: Plant genetics and evolution [https://fjellheimresearchgroup.blog/](/*read more here*/)
 
 Together, EMERGE addresses fundamental questions about how genomes and traits evolves — from the molecular mechanisms to the ecological and evolutionary forces that drive adaptation across species.
 
