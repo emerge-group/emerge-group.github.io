@@ -9,18 +9,14 @@ profile:
   image:
   image_circular: false
 
-selected_papers: true # includes a list of papers marked as "selected={true}"
+selected_papers: false
 social: true # includes social icons at the bottom of the page
 
 announcements:
-  enabled: true
-  scrollable: true
-  limit: 5
+  enabled: false
 
 latest_posts:
-  enabled: true
-  scrollable: true
-  limit: 3
+  enabled: false
 ---
 
 <div style="text-align: center; margin: 0 auto 2rem auto;">
