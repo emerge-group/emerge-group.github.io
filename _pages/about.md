@@ -26,8 +26,6 @@ latest_posts:
   </picture>
 </div>
 
-Welcome to the G**e**no**me** **r**e**g**ulation and **e**volution (EMERGE) research group. 
-
 
 EMERGE is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
 
