@@ -6,7 +6,7 @@ subtitle: Epigenomics and Mechanisms of Regulatory Genomics and Evolution
 
 profile:
   align: right
-  image: prof_pic.jpg
+  image: reggae.tiff
   image_circular: false
   more_info: >
     <p>Department of [Your Department]</p>
