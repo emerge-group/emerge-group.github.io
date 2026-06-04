@@ -1,0 +1,36 @@
+name: Update publications from CRISTIN
+
+on:
+  schedule:
+    - cron: "0 3 1 * *" # 03:00 UTC on the 1st of every month
+  workflow_dispatch: # allow manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch publications from CRISTIN
+        run: python3 bin/fetch_publications.py > _bibliography/papers.bib
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _bibliography/papers.bib
+          if git diff --cached --quiet; then
+            echo "No changes to publications."
+          else
+            git commit -m "Auto-update publications from CRISTIN"
+            git push
+          fi
