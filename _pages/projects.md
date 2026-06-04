@@ -5,7 +5,7 @@ permalink: /projects/
 description: Research projects of the EMERGE group
 nav: true
 nav_order: 3
-display_categories: [ongoing, past]
+display_categories: ["Active Projects", "Previous Projects"]
 horizontal: false
 ---
 

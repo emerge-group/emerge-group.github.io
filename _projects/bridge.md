@@ -4,7 +4,7 @@ title: BRIDGE
 description: A networking initiative examining host–microbiome interactions
 img: assets/img/11.jpg
 importance: 5
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** Norwegian University of Life Sciences (2026–2029)  

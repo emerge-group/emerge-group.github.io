@@ -4,7 +4,7 @@ title: Transpose
 description: Transposable elements and genome evolution
 img: assets/img/6.jpg
 importance: 2
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Research Council (2018–2022)

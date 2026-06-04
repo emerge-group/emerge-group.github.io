@@ -4,7 +4,7 @@ title: ImprovAFIsh
 description: Aquaculture sustainability through feed–microbiome–host interactions
 img: assets/img/8.jpg
 importance: 3
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Research Council (2020–2024)

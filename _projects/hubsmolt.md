@@ -4,7 +4,7 @@ title: HubSmolt
 description: Genetic mechanisms involved in smolt physiology development
 img: assets/img/7.jpg
 importance: 2
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** Norwegian Research Council, Thematic Research Grant (2024–2027)  

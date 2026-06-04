@@ -4,7 +4,7 @@ title: HoloGen
 description: Host–microbiome interactions — an EU-MSCA Doctoral Network
 img: assets/img/9.jpg
 importance: 3
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** EU-MSCA Doctoral Network (2024–2027)  

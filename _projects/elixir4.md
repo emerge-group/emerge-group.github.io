@@ -4,7 +4,7 @@ title: Elixir4
 description: Biological information infrastructure for life science research
 img: assets/img/1.jpg
 importance: 6
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** Norwegian Research Council, National Research Infrastructure (2026–2028)  

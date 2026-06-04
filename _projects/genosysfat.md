@@ -4,7 +4,7 @@ title: GenoSysFat
 description: Genomics of EPA/DHA synthesis and deposition in Atlantic salmon
 img: assets/img/12.jpg
 importance: 6
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Research Council (2015–2019)

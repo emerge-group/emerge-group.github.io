@@ -4,7 +4,7 @@ title: MUCOR
 description: Advancing understanding of the genetics of Mucoromycota fungi
 img: assets/img/5.jpg
 importance: 4
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** University of Minnesota and Norwegian University of Life Sciences (2026–2027)  

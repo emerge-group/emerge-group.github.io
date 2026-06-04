@@ -4,7 +4,7 @@ title: Rewired
 description: Whole genome duplication in vertebrate adaptation
 img: assets/img/4.jpg
 importance: 1
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Research Council (2018–2022)

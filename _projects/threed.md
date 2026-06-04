@@ -4,7 +4,7 @@ title: ThreeD
 description: The consequences of whole genome duplication in the evolution of three-dimensional genome organization
 img: assets/img/3.jpg
 importance: 1
-category: ongoing
+category: Active Projects
 ---
 
 **Funding:** Norwegian Research Council, FRIPRO programme (2025–2028)  

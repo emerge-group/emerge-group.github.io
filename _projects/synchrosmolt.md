@@ -4,7 +4,7 @@ title: Synchrosmolt
 description: Smolt production and breeding strategies
 img: assets/img/10.jpg
 importance: 5
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Seafood Research Fund (2020–2022)

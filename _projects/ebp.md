@@ -4,7 +4,7 @@ title: EBP-Nor
 description: Earth Biogenome Project Norway
 img: assets/img/2.jpg
 importance: 4
-category: past
+category: Previous Projects
 ---
 
 **Funding:** Norwegian Research Council (2021–2025)
