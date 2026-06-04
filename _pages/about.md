@@ -5,13 +5,9 @@ permalink: /
 subtitle: Genome regulation and evolution research group
 
 profile:
-  align: centre
-  image: reggae.tiff
+  align: right
+  image:
   image_circular: false
-  more_info: >
-    <p>Department of [Your Department]</p>
-    <p>[Your University]</p>
-    <p>[City, Country]</p>
 
 selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
@@ -27,6 +23,10 @@ latest_posts:
   limit: 3
 ---
 
+<div style="text-align: center; margin: 0 auto 2rem auto;">
+  <img src="/assets/img/reggae.tiff" style="width: 324px;" alt="EMERGE group">
+</div>
+
 Welcome to the G**e**no**me** **r**e**g**ulation and **e**volution (EMERGE) research group. 
 
 
@@ -36,7 +36,7 @@ EMERGE is a cross-faculty research group at NMBU uniting three research groups w
 
 - **The Hvidsten lab** develops computational and statistical methods to model gene regulatory networks and understand how network-level properties give rise to novel gene regulation and traits. 
 
-- **The Fjellheim lab** investigates how temperate grasses (Pooideae) evolved adaptations to cold climates over 65 million years, combining transcriptomics, genomics, and phylogenetics to trace the molecular basis of traits like frost tolerance and flowering time. 
+- **The Fjellheim lab** investigates how temperate grasses (Pooideae) evolved adaptations to cold climates over 65 million years, combining transcriptomics, genomics, and phylogenetics to trace the molecular basis of traits like frost tolerance and evolutionary biology to trace the molecular basis of traits like frost tolerance and flowering time. 
 
 Together, EMERGE addresses fundamental questions about how gene regulation evolves — from the molecular mechanisms that shape genome function to the ecological and evolutionary forces that drive adaptation across species.
 
