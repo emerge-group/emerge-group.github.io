@@ -40,3 +40,15 @@ EMERGE is a cross-faculty research group at NMBU uniting three research groups w
 Together, EMERGE addresses fundamental questions about how genomes and traits evolves — from the molecular mechanisms to the ecological and evolutionary forces that drive adaptation across species.
 
 Browse our [publications](/publications/), meet the [team](/profiles/), or explore our [projects](/projects/).
+
+---
+
+{% assign latest = site.posts.first %}
+{% if latest %}
+<div style="background: #f9f9f9; border-left: 4px solid #ccc; padding: 1rem 1.2rem; border-radius: 4px; margin-top: 1rem;">
+  <div style="font-size: 0.8rem; color: #888; margin-bottom: 0.3rem;">Latest news — {{ latest.date | date: "%B %d, %Y" }}</div>
+  <div style="font-weight: 600; margin-bottom: 0.5rem;"><a href="{{ latest.url }}">{{ latest.title }}</a></div>
+  <div style="font-size: 0.9rem;">{{ latest.content | strip_html | truncatewords: 40 }}</div>
+  <div style="margin-top: 0.6rem; font-size: 0.85rem;"><a href="/blog/">All news →</a></div>
+</div>
+{% endif %}
