@@ -22,7 +22,7 @@ latest_posts:
 <div style="text-align: center; margin: 0 auto 2rem auto;">
   <picture>
     <source srcset="/assets/img/reggae-480.webp" type="image/webp">
-    <img src="/assets/img/reggae.tiff" style="width: 324px;" alt="EMERGE group">
+    <img src="/assets/img/emerge2.png" style="width: 324px;" alt="EMERGE group">
   </picture>
 </div>
 
