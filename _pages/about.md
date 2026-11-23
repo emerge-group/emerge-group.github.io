@@ -20,8 +20,12 @@ latest_posts:
 ---
 
 <style>
-  /* hide the plain-text site-title heading on the front page; the logo carries the name */
-  .post > .post-header { display: none; }
+  /* hide the plain-text site-title heading on the front page (the logo carries the name),
+     but keep it for screen readers so the page still has a main heading */
+  .post > .post-header {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
 </style>
 
 <div style="text-align: center; margin: 0 auto 2rem auto;">
