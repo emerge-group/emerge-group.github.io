@@ -73,4 +73,5 @@ jobs:
           TOOLS="$RUNNER_TEMP/axe-tools/node_modules"
           "$TOOLS/.bin/http-server" _site/ -s &
           for i in $(seq 1 30); do curl -sf http://localhost:8080/ >/dev/null && break; sleep 1; done
-          "$TOOLS/.bin/axe" --chromedriver-path "$TOOLS/chromedriver/bin/chromedriver" http://localhost:8080/${{ github.event.inputs.url || env.URL }} --load-delay=1500 --exit
+          # use the Chrome installed above (matches chromedriver), not the runner's preinstalled one
+          "$TOOLS/.bin/axe" --chrome-path "${{ steps.setup-chrome.outputs.chrome-path }}" --chromedriver-path "$TOOLS/chromedriver/bin/chromedriver" http://localhost:8080/${{ github.event.inputs.url || env.URL }} --load-delay=1500 --exit
