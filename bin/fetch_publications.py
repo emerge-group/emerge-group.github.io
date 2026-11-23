@@ -8,6 +8,8 @@ _bibliography/papers.bib. bioRxiv preprints (any level) go to _bibliography/prep
 
 Usage: python3 bin/fetch_publications.py
 """
+import difflib
+import json
 import os
 import re
 import ssl
@@ -43,6 +45,15 @@ PAGE_SIZE = 100
 # bioRxiv preprints: NVA registers them as AcademicArticle with journal "BioRxiv";
 # also match bioRxiv DOIs (10.1101/YYYY.MM.DD... and the newer 10.64898/... prefix).
 BIORXIV_DOI = re.compile(r"10\.1101/\d{4}\.\d{2}\.\d{2}\.|10\.64898/", re.I)
+
+BIORXIV_API = "https://api.biorxiv.org/details/biorxiv/{}"
+
+# A preprint counts as published when a paper in the peer-reviewed list has the same first
+# author, is from the same year or later, and has a near-identical title (SEQ_MATCH) or shares
+# most of the title's key words (WORD_MATCH). Tuned on the PIs' preprints in Nov 2026.
+SEQ_MATCH = 0.75
+WORD_MATCH = 0.55
+STOPWORDS = set("a an the of in and to for from by with on at is are as its into via using reveals reveal".split())
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_bibliography")
 
@@ -206,6 +217,85 @@ def norm_title(t):
     return re.sub(r"[^a-z0-9]", "", t.lower())
 
 
+def ascii_lower(s):
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
+
+
+def title_words(t):
+    return re.findall(r"[a-z0-9]+", ascii_lower(t))
+
+
+def key_words(t):
+    return {w for w in title_words(t) if w not in STOPWORDS and len(w) > 2}
+
+
+def first_author_surname(fields):
+    a = fields.get("author", "").split(" and ")[0].strip()
+    name = a.split(",")[0] if "," in a else (a.split()[-1] if a.split() else "")
+    return ascii_lower(name)
+
+
+def year_of(fields):
+    y = str(fields.get("year", ""))
+    return int(y) if y.isdigit() else 0
+
+
+def similar_published(pre, papers):
+    """Return the published paper that looks like this preprint's journal version, if any."""
+    author, year = first_author_surname(pre), year_of(pre)
+    pre_words, pre_title = key_words(pre.get("title", "")), " ".join(title_words(pre.get("title", "")))
+    for f in papers:
+        if norm_title(f.get("title", "")) == norm_title(pre.get("title", "")):
+            return f
+        if first_author_surname(f) != author or year_of(f) < year:
+            continue
+        seq = difflib.SequenceMatcher(None, pre_title, " ".join(title_words(f.get("title", "")))).ratio()
+        words = key_words(f.get("title", ""))
+        overlap = len(pre_words & words) / max(1, min(len(pre_words), len(words)))
+        if seq >= SEQ_MATCH or overlap >= WORD_MATCH:
+            return f
+    return None
+
+
+def biorxiv_published_doi(doi):
+    """Journal DOI that bioRxiv links this preprint to, or None (also on any lookup error)."""
+    doi = re.sub(r"^https?://(dx\.)?doi\.org/", "", doi or "", flags=re.I)
+    if not doi:
+        return None
+    req = urllib.request.Request(BIORXIV_API.format(doi), headers={"User-Agent": HEADERS["User-Agent"]})
+    try:
+        with urllib.request.urlopen(req, timeout=30, context=_ssl_ctx) as r:
+            versions = json.loads(r.read().decode("utf-8")).get("collection") or []
+    except Exception as e:
+        print(f"  bioRxiv lookup failed for {doi}: {e}", file=sys.stderr)
+        return None
+    published = (versions[-1].get("published") or "") if versions else ""
+    return published.lower() if published and published.upper() != "NA" else None
+
+
+def drop_published_preprints(preprints, papers):
+    paper_fields = [f for _, _, f in papers.values()]
+    paper_dois = {re.sub(r"^https?://(dx\.)?doi\.org/", "", f.get("doi", ""), flags=re.I).lower()
+                  for f in paper_fields}
+    kept = {}
+    for nva_id, entry in preprints.items():
+        f = entry[2]
+        label = f.get("title", "")[:70]
+        pub = biorxiv_published_doi(f.get("doi"))
+        if pub and pub in paper_dois:
+            print(f"  published (bioRxiv link {pub}): {label}", file=sys.stderr)
+            continue
+        match = similar_published(f, paper_fields)
+        if match:
+            print(f"  published (similar title: {match.get('title', '')[:50]}): {label}", file=sys.stderr)
+            continue
+        if pub:
+            print(f"  bioRxiv says published as {pub}, not in the list yet; keeping: {label}", file=sys.stderr)
+        kept[nva_id] = entry
+        time.sleep(0.2)
+    return kept
+
+
 def render(entries):
     used, out = set(), []
     for etype, nva_id, fields in sorted(entries, key=sort_key):
@@ -246,9 +336,9 @@ def main():
     if not papers:
         sys.exit("No publications returned from NVA; refusing to write an empty bibliography.")
 
-    # drop preprints that are already listed as a published paper with the same title
-    published = {norm_title(f.get("title", "")) for _, _, f in papers.values()}
-    preprints = {k: v for k, v in preprints.items() if norm_title(v[2].get("title", "")) not in published}
+    # drop preprints whose journal version is already in the peer-reviewed list
+    print("Checking preprints for published versions ...", file=sys.stderr)
+    preprints = drop_published_preprints(preprints, papers)
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     pis = "% PIs: Sandve (317809), Hvidsten (40149), Fjellheim (317404)\n"
@@ -256,7 +346,7 @@ def main():
           f"% Auto-generated from NVA (nva.sikt.no) on {today}; Level 1/2 results + pre-{PRE_LEVEL_YEAR} academic articles\n" + pis,
           render(papers.values()))
     write("preprints.bib",
-          f"% Auto-generated from NVA (nva.sikt.no) on {today}; bioRxiv preprints not yet listed as published\n" + pis,
+          f"% Auto-generated from NVA (nva.sikt.no) on {today}; bioRxiv preprints whose journal version is not in papers.bib\n" + pis,
           render(preprints.values()))
     print(f"\nWrote {len(papers)} publications and {len(preprints)} preprints.", file=sys.stderr)
 
