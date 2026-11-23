@@ -1,4 +1,4 @@
-name: Update publications from CRISTIN
+name: Update publications from NVA
 
 on:
   schedule:
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fetch publications from CRISTIN
+      - name: Fetch publications from NVA
         run: python3 bin/fetch_publications.py > _bibliography/papers.bib
 
       - name: Commit and push if changed
@@ -31,6 +31,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to publications."
           else
-            git commit -m "Auto-update publications from CRISTIN"
+            git commit -m "Auto-update publications from NVA"
             git push
           fi

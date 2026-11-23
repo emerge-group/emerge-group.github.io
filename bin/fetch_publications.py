@@ -1,159 +1,226 @@
 #!/usr/bin/env python3
-"""Fetch publications for EMERGE lab PIs from CRISTIN API and write papers.bib."""
+"""Fetch publications for the EMERGE PIs from NVA (Nasjonalt vitenarkiv) and print papers.bib.
 
-import json
+NVA replaces CRISTIN as the Norwegian research registry. Its search API can return BibTeX
+directly; this script asks for Level 1/2 (peer-reviewed) results for each PI, merges them
+(shared papers appear once), tidies a few fields for the al-folio bib layout, and prints
+the combined bibliography to stdout.
+
+Usage: python3 bin/fetch_publications.py > _bibliography/papers.bib
+"""
 import re
 import ssl
 import sys
+import time
+import unicodedata
+import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 
-# macOS Python ships without system CA certs; create a permissive context for the CRISTIN API
-_ssl_ctx = ssl.create_default_context()
-try:
-    import certifi
-    _ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-except ImportError:
-    _ssl_ctx.check_hostname = False
-    _ssl_ctx.verify_mode = ssl.CERT_NONE
+SEARCH_API = "https://api.nva.unit.no/search/resources"
+PERSON_URI = "https://api.nva.unit.no/cristin/person/{}"
+LANDING_PAGE = "https://nva.sikt.no/registration/{}"
 
-CRISTIN_API = "https://api.cristin.no/v2"
-
-# EMERGE lab PIs with their CRISTIN person IDs
+# EMERGE lab PIs with their CRISTIN/NVA person IDs
 PIS = [
-    {"name": "Simen Rød Sandve",    "cristin_id": "317809"},
-    {"name": "Torgeir Rhoden Hvidsten", "cristin_id": "40149"},
-    {"name": "Siri Fjellheim",      "cristin_id": "317404"},
+    {"name": "Simen Rød Sandve", "id": "317809"},
+    {"name": "Torgeir Rhoden Hvidsten", "id": "40149"},
+    {"name": "Siri Fjellheim", "id": "317404"},
 ]
 
-SUPPORTED_CATEGORIES = {"ARTICLE", "CHAPTER", "REPORT", "REVIEW", "SHORT_COMMUNICATION"}
+# Ask NVA itself for Level 1/2 results instead of re-deriving the level client-side:
+# book chapters carry their level on the parent anthology, so NVA's own filter is the
+# only reliable way to match what nva.sikt.no shows.
+LEVELS = "LevelOne,LevelTwo"
+# The level system started in 2004, so older papers are "Unassigned" in NVA. For those,
+# keep academic articles/reviews/chapters published before 2004.
+UNASSIGNED = "Unassigned"
+PRE_LEVEL_YEAR = 2004
+PRE_LEVEL_TYPES = {"AcademicArticle", "AcademicLiteratureReview", "AcademicChapter"}
+PAGE_SIZE = 100
+
+# BibTeX fields kept in the output (everything else NVA sends is dropped)
+KEEP_FIELDS = [
+    "author", "title", "journal", "booktitle", "publisher", "school", "year", "month",
+    "volume", "number", "pages", "doi", "html", "isbn", "issn", "abstract",
+]
+
+HEADERS = {
+    "User-Agent": "emerge-group-website (+https://emerge-group.github.io)",
+    "Accept": "text/x-bibtex; charset=utf-8",
+}
+
+try:
+    import certifi
+
+    _ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    _ssl_ctx = ssl.create_default_context()
 
 
-def get(url):
-    with urllib.request.urlopen(url, timeout=15, context=_ssl_ctx) as r:
-        return json.loads(r.read().decode())
+def fetch_bibtex_page(person_id, levels, frm):
+    params = urllib.parse.urlencode({
+        "contributor": PERSON_URI.format(person_id),
+        "scientificValue": levels,
+        "size": PAGE_SIZE,
+        "from": frm,
+    })
+    req = urllib.request.Request(f"{SEARCH_API}?{params}", headers=HEADERS)
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=60, context=_ssl_ctx) as r:
+                return r.read().decode("utf-8")
+        except Exception:
+            if attempt == 2:
+                raise
+            time.sleep(2 * (attempt + 1))
 
 
-def fetch_all_results(cristin_id):
-    results, page = [], 1
+def split_entries(text):
+    """Split a BibTeX string into top-level entries by tracking brace depth."""
+    entries, i, n = [], 0, len(text)
     while True:
-        url = f"{CRISTIN_API}/results?contributor={cristin_id}&fields=all&per_page=50&page={page}"
-        batch = get(url)
-        if not batch:
+        start = text.find("@", i)
+        if start == -1:
+            return entries
+        brace = text.find("{", start)
+        if brace == -1:
+            return entries
+        depth, j = 0, brace
+        while j < n:
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        entries.append(text[start:j + 1])
+        i = j + 1
+
+
+def parse_entry(raw):
+    """Return (type, key, {field: value}) for one BibTeX entry with braced values."""
+    m = re.match(r"@(\w+)\s*\{\s*([^,\s]+)\s*,", raw)
+    if not m:
+        return None
+    etype, key = m.group(1).lower(), m.group(2)
+    body = raw[m.end():-1]
+    fields, i, n = {}, 0, len(body)
+    while i < n:
+        fm = re.compile(r"\s*,?\s*([A-Za-z_][\w-]*)\s*=\s*").match(body, i)
+        if not fm:
             break
-        results.extend(batch)
-        if len(batch) < 50:
-            break
-        page += 1
-    return results
+        name = fm.group(1).lower()
+        i = fm.end()
+        if i < n and body[i] == "{":
+            depth, j = 0, i
+            while j < n:
+                if body[j] == "{":
+                    depth += 1
+                elif body[j] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            fields[name] = body[i + 1:j].strip()
+            i = j + 1
+        else:  # bare value (numbers)
+            vm = re.compile(r"([^,\n]*)").match(body, i)
+            fields[name] = vm.group(1).strip().strip('"')
+            i = vm.end()
+    return etype, key, fields
 
 
-def fetch_contributors(cristin_result_id):
-    try:
-        url = f"{CRISTIN_API}/results/{cristin_result_id}/contributors?per_page=100"
-        return get(url)
-    except Exception:
-        return []
+def ascii_word(s):
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    return re.sub(r"[^A-Za-z]", "", s)
 
 
-def make_bibtex_key(result):
-    first_author = ""
-    preview = result.get("contributors", {}).get("preview", [])
-    if preview:
-        first_author = preview[0].get("surname", "Unknown")
-    year = result.get("year_published", "0000")
-    title = result.get("title", {}).get("en") or next(iter(result.get("title", {}).values()), "")
-    first_word = re.sub(r"[^a-zA-Z]", "", title.split()[0]) if title.split() else "unknown"
-    return f"{first_author}{year}{first_word}"
+def readable_key(fields, used):
+    """AuthorYearWord, e.g. Baudement2026Developmental (suffix a, b, ... if taken)."""
+    first_author = fields.get("author", "Unknown").split(" and ")[0].strip()
+    if "," in first_author:
+        last = first_author.split(",")[0]
+    else:
+        last = first_author.split()[-1] if first_author.split() else "Unknown"
+    words = [ascii_word(w) for w in fields.get("title", "").split()]
+    first_word = next((w for w in words if w), "untitled")
+    base = f"{ascii_word(last) or 'Unknown'}{fields.get('year', '0000')}{first_word}"
+    key, k = base, 0
+    while key in used:
+        key = base + "abcdefghijklmnopqrstuvwxyz"[k]
+        k += 1
+    used.add(key)
+    return key
 
 
-def format_author(contributor):
-    first = contributor.get("first_name", "")
-    last = contributor.get("surname", "")
-    if first and last:
-        return f"{last}, {first}"
-    return last or first
-
-
-def result_to_bibtex(result, contributors):
-    category = result.get("category", {}).get("code", "ARTICLE")
-    bib_type = "article" if category in {"ARTICLE", "REVIEW", "SHORT_COMMUNICATION"} else \
-               "incollection" if category == "CHAPTER" else "techreport"
-
-    key = make_bibtex_key(result)
-    title = result.get("title", {}).get("en") or next(iter(result.get("title", {}).values()), "No title")
-    year = result.get("year_published", "")
-
-    author_list = [format_author(c) for c in contributors] if contributors else \
-                  [format_author(c) for c in result.get("contributors", {}).get("preview", [])]
-    author_str = " and ".join(author_list) if author_list else "Unknown"
-
-    journal = result.get("journal", {}).get("name") or \
-              result.get("channel", {}).get("title") or \
-              result.get("series", {}).get("name") or ""
-
-    doi = next((l["url"].replace("https://doi.org/", "") for l in result.get("links", [])
-                if l.get("url_type") == "DOI"), "")
-
-    volume = result.get("volume", "")
-    issue = result.get("issue", "")
-    pages = result.get("pages", {})
-    pages_str = ""
-    if isinstance(pages, dict) and pages.get("from"):
-        pages_str = f"{pages['from']}--{pages['to']}" if pages.get("to") else pages["from"]
-
-    lines = [f"@{bib_type}{{{key},"]
-    lines.append(f"  author    = {{{author_str}}},")
-    lines.append(f"  title     = {{{title}}},")
-    lines.append(f"  year      = {{{year}}},")
-    if journal:
-        field = "journal" if bib_type == "article" else "booktitle"
-        lines.append(f"  {field:<9} = {{{journal}}},")
-    if volume:
-        lines.append(f"  volume    = {{{volume}}},")
-    if issue:
-        lines.append(f"  number    = {{{issue}}},")
-    if pages_str:
-        lines.append(f"  pages     = {{{pages_str}}},")
+def tidy(fields, nva_id):
+    doi = fields.get("doi", "")
+    doi = re.sub(r"^https?://(dx\.)?doi\.org/", "", doi, flags=re.I).strip()
     if doi:
-        lines.append(f"  doi       = {{{doi}}},")
-    lines.append("}")
-    return "\n".join(lines)
+        fields["doi"] = doi
+    else:
+        fields.pop("doi", None)
+        fields["html"] = LANDING_PAGE.format(nva_id)  # shown as an "HTML" button
+    return {k: fields[k] for k in KEEP_FIELDS if fields.get(k)}
+
+
+MONTHS = {m: i for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
+
+
+def sort_key(item):
+    _, _, f = item
+    year = int(f["year"]) if str(f.get("year", "")).isdigit() else 0
+    return (-year, -MONTHS.get(str(f.get("month", "")).lower()[:3], 0), f.get("title", "").lower())
+
+
+def fetch_all(person_id, levels):
+    entries, frm = [], 0
+    while True:
+        page = split_entries(fetch_bibtex_page(person_id, levels, frm))
+        entries += [p for p in (parse_entry(raw) for raw in page) if p]
+        if len(page) < PAGE_SIZE:
+            return entries
+        frm += PAGE_SIZE
+        time.sleep(0.3)
+
+
+def is_pre_level_academic(fields):
+    year = int(fields["year"]) if str(fields.get("year", "")).isdigit() else 9999
+    nva_type = fields.get("note", "").replace("nva type:", "").strip()
+    return year < PRE_LEVEL_YEAR and nva_type in PRE_LEVEL_TYPES
 
 
 def main():
-    seen_ids = set()
-    entries = []
-
+    by_id = {}
     for pi in PIS:
-        print(f"Fetching publications for {pi['name']} ...", file=sys.stderr)
-        results = fetch_all_results(pi["cristin_id"])
-        print(f"  {len(results)} results found", file=sys.stderr)
+        print(f"Fetching {pi['name']} ...", file=sys.stderr)
+        leveled = fetch_all(pi["id"], LEVELS)
+        older = [e for e in fetch_all(pi["id"], UNASSIGNED) if is_pre_level_academic(e[2])]
+        for etype, nva_id, fields in leveled + older:
+            by_id.setdefault(nva_id, (etype, nva_id, fields))
+        print(f"  {len(leveled)} Level 1/2 + {len(older)} pre-{PRE_LEVEL_YEAR} articles", file=sys.stderr)
 
-        for result in results:
-            rid = result.get("cristin_result_id")
-            if rid in seen_ids:
-                continue
-            seen_ids.add(rid)
+    if not by_id:
+        sys.exit("No publications returned from NVA; refusing to write an empty bibliography.")
 
-            category = result.get("category", {}).get("code", "")
-            if category not in SUPPORTED_CATEGORIES:
-                continue
+    used, out = set(), []
+    for etype, nva_id, fields in sorted(by_id.values(), key=sort_key):
+        clean = tidy(dict(fields), nva_id)
+        key = readable_key(clean, used)
+        width = max(len(k) for k in clean)
+        lines = [f"@{etype}{{{key},"]
+        lines += [f"  {k:<{width}} = {{{v}}}," for k, v in clean.items()]
+        lines.append("}")
+        out.append("\n".join(lines))
 
-            contributor_count = result.get("contributors", {}).get("count", 0)
-            if contributor_count > 6:
-                contributors = fetch_contributors(rid)
-            else:
-                contributors = result.get("contributors", {}).get("preview", [])
-
-            entries.append(result_to_bibtex(result, contributors))
-
-    header = f"% Auto-generated from CRISTIN API on {datetime.utcnow().strftime('%Y-%m-%d')}\n" \
-             f"% PIs: Sandve (317809), Hvidsten (40149), Fjellheim (317404)\n\n"
-
-    output = header + "\n\n".join(entries) + "\n"
-    print(output)
-    print(f"\nTotal: {len(entries)} unique publications written.", file=sys.stderr)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    print(f"% Auto-generated from NVA (nva.sikt.no) on {today}; Level 1/2 results + pre-{PRE_LEVEL_YEAR} academic articles")
+    print("% PIs: Sandve (317809), Hvidsten (40149), Fjellheim (317404)\n")
+    print("\n\n".join(out))
+    print(f"\nTotal: {len(out)} unique publications written.", file=sys.stderr)
 
 
 if __name__ == "__main__":
