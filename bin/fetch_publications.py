@@ -48,6 +48,12 @@ BIORXIV_DOI = re.compile(r"10\.1101/\d{4}\.\d{2}\.\d{2}\.|10\.64898/", re.I)
 
 BIORXIV_API = "https://api.biorxiv.org/details/biorxiv/{}"
 
+# Preprints to always hide (bioRxiv DOI), e.g. ones published under a very different title
+# that neither the bioRxiv link nor the title match catches. Add a comment saying why.
+SKIP_PREPRINTS = {
+    "10.1101/2024.07.05.602039",  # snowy owl centromeres -> Genome Biology 2026 (10.1186/s13059-026-04175-y)
+}
+
 # A preprint counts as published when a paper in the peer-reviewed list has the same first
 # author, is from the same year or later, and has a near-identical title (SEQ_MATCH) or shares
 # most of the title's key words (WORD_MATCH). Tuned on the PIs' preprints in Nov 2026.
@@ -281,6 +287,10 @@ def drop_published_preprints(preprints, papers):
     for nva_id, entry in preprints.items():
         f = entry[2]
         label = f.get("title", "")[:70]
+        doi = re.sub(r"^https?://(dx\.)?doi\.org/", "", f.get("doi", ""), flags=re.I).lower()
+        if doi in SKIP_PREPRINTS:
+            print(f"  skipped (SKIP_PREPRINTS): {label}", file=sys.stderr)
+            continue
         pub = biorxiv_published_doi(f.get("doi"))
         if pub and pub in paper_dois:
             print(f"  published (bioRxiv link {pub}): {label}", file=sys.stderr)

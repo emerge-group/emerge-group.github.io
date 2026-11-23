@@ -13,13 +13,18 @@ nav_order: 2
 
 {% include bib_search.liquid %}
 
+{% capture preprint_list %}{% bibliography --file preprints %}{% endcapture %}
+{% if preprint_list contains '<li' %}
+
 ## preprints
 
 <div class="publications">
 
-{% bibliography --file preprints %}
+{{ preprint_list }}
 
 </div>
+
+{% endif %}
 
 ## peer-reviewed publications
 
