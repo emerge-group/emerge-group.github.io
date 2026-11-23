@@ -19,12 +19,17 @@ latest_posts:
   enabled: false
 ---
 
+<style>
+  /* hide the plain-text site-title heading on the front page; the logo carries the name */
+  .post > .post-header { display: none; }
+</style>
+
 <div style="text-align: center; margin: 0 auto 2rem auto;">
-  <img src="/assets/img/emerge_logo.png" style="width: 324px;" alt="EMERGE group">
+  <img src="/assets/img/emerge_logo.png" style="width: 324px;" alt="emerge-group: gEnoME ReGulation and Evolution">
 </div>
 
 
-EMERGE is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
+Genome regulation and evolution research group (EMERGE) is a cross-faculty research group at NMBU uniting three research groups with complementary expertise in genome regulation, bioinformatics, and evolutionary biology. 
 
 - **Sandve lab**: Genome evolution ([*read more here*](https://srsandve.org/))
 - **Hvidsten lab**: Computational and statistical methods ([*read more here*](https://trhvidsten.com/))
