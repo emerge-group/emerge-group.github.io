@@ -63,13 +63,14 @@ jobs:
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: ${{ env.CHROMIUM_VERSION }}
-      - name: Install chromedriver 🚗
+      - name: Install chromedriver, axe and http-server 🚗
+        # installed into a temp prefix: global installs fail on the runner (EACCES linking man pages)
         run: |
-          npm install -g chromedriver@$CHROMIUM_VERSION
+          npm install --no-audit --no-fund --prefix "$RUNNER_TEMP/axe-tools" chromedriver@$CHROMIUM_VERSION @axe-core/cli http-server
       - name: Run axe 🪓
         # https://github.com/dequelabs/axe-core-npm/tree/develop/packages/cli
         run: |
-          npm install -g @axe-core/cli
-          npm install -g http-server
-          http-server _site/ &
-          axe --chromedriver-path $(npm root -g)/chromedriver/bin/chromedriver http://localhost:8080/${{ github.event.inputs.url || env.URL }} --load-delay=1500 --exit
+          TOOLS="$RUNNER_TEMP/axe-tools/node_modules"
+          "$TOOLS/.bin/http-server" _site/ -s &
+          for i in $(seq 1 30); do curl -sf http://localhost:8080/ >/dev/null && break; sleep 1; done
+          "$TOOLS/.bin/axe" --chromedriver-path "$TOOLS/chromedriver/bin/chromedriver" http://localhost:8080/${{ github.event.inputs.url || env.URL }} --load-delay=1500 --exit
