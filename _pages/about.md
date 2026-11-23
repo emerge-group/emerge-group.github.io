@@ -20,7 +20,7 @@ latest_posts:
 ---
 
 <div style="text-align: center; margin: 0 auto 2rem auto;">
-  <img src="/assets/img/emerge2.png" style="width: 324px;" alt="EMERGE group">
+  <img src="/assets/img/emerge_logo.png" style="width: 324px;" alt="EMERGE group">
 </div>
 
 
