@@ -21,13 +21,13 @@ jobs:
           python-version: "3.12"
 
       - name: Fetch publications from NVA
-        run: python3 bin/fetch_publications.py > _bibliography/papers.bib
+        run: python3 bin/fetch_publications.py
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add _bibliography/papers.bib
+          git add _bibliography/papers.bib _bibliography/preprints.bib
           if git diff --cached --quiet; then
             echo "No changes to publications."
           else

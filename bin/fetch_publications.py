@@ -3,11 +3,12 @@
 
 NVA replaces CRISTIN as the Norwegian research registry. Its search API can return BibTeX
 directly; this script asks for Level 1/2 (peer-reviewed) results for each PI, merges them
-(shared papers appear once), tidies a few fields for the al-folio bib layout, and prints
-the combined bibliography to stdout.
+(shared papers appear once), tidies a few fields for the al-folio bib layout, and writes
+_bibliography/papers.bib. bioRxiv preprints (any level) go to _bibliography/preprints.bib.
 
-Usage: python3 bin/fetch_publications.py > _bibliography/papers.bib
+Usage: python3 bin/fetch_publications.py
 """
+import os
 import re
 import ssl
 import sys
@@ -39,6 +40,12 @@ PRE_LEVEL_YEAR = 2004
 PRE_LEVEL_TYPES = {"AcademicArticle", "AcademicLiteratureReview", "AcademicChapter"}
 PAGE_SIZE = 100
 
+# bioRxiv preprints: NVA registers them as AcademicArticle with journal "BioRxiv";
+# also match bioRxiv DOIs (10.1101/YYYY.MM.DD... and the newer 10.64898/... prefix).
+BIORXIV_DOI = re.compile(r"10\.1101/\d{4}\.\d{2}\.\d{2}\.|10\.64898/", re.I)
+
+OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "_bibliography")
+
 # BibTeX fields kept in the output (everything else NVA sends is dropped)
 KEEP_FIELDS = [
     "author", "title", "journal", "booktitle", "publisher", "school", "year", "month",
@@ -59,12 +66,10 @@ except ImportError:
 
 
 def fetch_bibtex_page(person_id, levels, frm):
-    params = urllib.parse.urlencode({
-        "contributor": PERSON_URI.format(person_id),
-        "scientificValue": levels,
-        "size": PAGE_SIZE,
-        "from": frm,
-    })
+    query = {"contributor": PERSON_URI.format(person_id), "size": PAGE_SIZE, "from": frm}
+    if levels:
+        query["scientificValue"] = levels
+    params = urllib.parse.urlencode(query)
     req = urllib.request.Request(f"{SEARCH_API}?{params}", headers=HEADERS)
     for attempt in range(3):
         try:
@@ -193,21 +198,17 @@ def is_pre_level_academic(fields):
     return year < PRE_LEVEL_YEAR and nva_type in PRE_LEVEL_TYPES
 
 
-def main():
-    by_id = {}
-    for pi in PIS:
-        print(f"Fetching {pi['name']} ...", file=sys.stderr)
-        leveled = fetch_all(pi["id"], LEVELS)
-        older = [e for e in fetch_all(pi["id"], UNASSIGNED) if is_pre_level_academic(e[2])]
-        for etype, nva_id, fields in leveled + older:
-            by_id.setdefault(nva_id, (etype, nva_id, fields))
-        print(f"  {len(leveled)} Level 1/2 + {len(older)} pre-{PRE_LEVEL_YEAR} articles", file=sys.stderr)
+def is_biorxiv(fields):
+    return "biorxiv" in fields.get("journal", "").lower() or bool(BIORXIV_DOI.search(fields.get("doi", "")))
 
-    if not by_id:
-        sys.exit("No publications returned from NVA; refusing to write an empty bibliography.")
 
+def norm_title(t):
+    return re.sub(r"[^a-z0-9]", "", t.lower())
+
+
+def render(entries):
     used, out = set(), []
-    for etype, nva_id, fields in sorted(by_id.values(), key=sort_key):
+    for etype, nva_id, fields in sorted(entries, key=sort_key):
         clean = tidy(dict(fields), nva_id)
         key = readable_key(clean, used)
         width = max(len(k) for k in clean)
@@ -215,12 +216,49 @@ def main():
         lines += [f"  {k:<{width}} = {{{v}}}," for k, v in clean.items()]
         lines.append("}")
         out.append("\n".join(lines))
+    return "\n\n".join(out)
+
+
+def write(name, header, body):
+    path = os.path.join(OUT_DIR, name)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(header + "\n" + body + "\n")
+    return path
+
+
+def main():
+    papers, preprints = {}, {}
+    for pi in PIS:
+        print(f"Fetching {pi['name']} ...", file=sys.stderr)
+        leveled = fetch_all(pi["id"], LEVELS)
+        older = [e for e in fetch_all(pi["id"], UNASSIGNED) if is_pre_level_academic(e[2])]
+        everything = fetch_all(pi["id"], None)
+        pre = [e for e in everything if is_biorxiv(e[2])]
+        for etype, nva_id, fields in leveled + older:
+            if not is_biorxiv(fields):
+                papers.setdefault(nva_id, (etype, nva_id, fields))
+        for etype, nva_id, fields in pre:
+            fields["journal"] = "bioRxiv"
+            preprints.setdefault(nva_id, ("article", nva_id, fields))
+        print(f"  {len(leveled)} Level 1/2 + {len(older)} pre-{PRE_LEVEL_YEAR} articles, "
+              f"{len(pre)} bioRxiv preprints", file=sys.stderr)
+
+    if not papers:
+        sys.exit("No publications returned from NVA; refusing to write an empty bibliography.")
+
+    # drop preprints that are already listed as a published paper with the same title
+    published = {norm_title(f.get("title", "")) for _, _, f in papers.values()}
+    preprints = {k: v for k, v in preprints.items() if norm_title(v[2].get("title", "")) not in published}
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    print(f"% Auto-generated from NVA (nva.sikt.no) on {today}; Level 1/2 results + pre-{PRE_LEVEL_YEAR} academic articles")
-    print("% PIs: Sandve (317809), Hvidsten (40149), Fjellheim (317404)\n")
-    print("\n\n".join(out))
-    print(f"\nTotal: {len(out)} unique publications written.", file=sys.stderr)
+    pis = "% PIs: Sandve (317809), Hvidsten (40149), Fjellheim (317404)\n"
+    write("papers.bib",
+          f"% Auto-generated from NVA (nva.sikt.no) on {today}; Level 1/2 results + pre-{PRE_LEVEL_YEAR} academic articles\n" + pis,
+          render(papers.values()))
+    write("preprints.bib",
+          f"% Auto-generated from NVA (nva.sikt.no) on {today}; bioRxiv preprints not yet listed as published\n" + pis,
+          render(preprints.values()))
+    print(f"\nWrote {len(papers)} publications and {len(preprints)} preprints.", file=sys.stderr)
 
 
 if __name__ == "__main__":
